@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 def parse_python_file(file_info: dict) -> dict:
+    """Parse a single Python file using AST to extract functions, classes, imports, and calls."""
     content = file_info["content"]
     relative_path = file_info["relative_path"]
 
@@ -62,6 +63,7 @@ def parse_python_file(file_info: dict) -> dict:
 
 
 def parse_repo(files: list[dict]) -> list[dict]:
+    """Parse all Python files in the repo. Returns list of parsed file dicts with structure info."""
     parsed = []
     python_files = [f for f in files if f["extension"] == ".py"]
     

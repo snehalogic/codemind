@@ -6,6 +6,7 @@ from config import MAX_CHUNK_SIZE, CHUNK_OVERLAP
 
 
 def chunk_file(file_info: dict) -> list[dict]:
+    """Split a file's content into overlapping chunks for embedding."""
     content = file_info["content"]
     path = file_info["relative_path"]
     chunks = []
@@ -25,6 +26,7 @@ def chunk_file(file_info: dict) -> list[dict]:
 
 
 def build_vector_store(files: list[dict], collection_name: str = "codemind"):
+    """Embed all file chunks and store them in ChromaDB for semantic search."""
     client = chromadb.PersistentClient(path="./chroma_db")
 
     try:
@@ -55,6 +57,7 @@ def build_vector_store(files: list[dict], collection_name: str = "codemind"):
 
 
 def query_vector_store(query: str, collection_name: str = "codemind", n_results: int = 5):
+    """Query the ChromaDB vector store and return the most relevant code chunks."""
     client = chromadb.PersistentClient(path="./chroma_db")
     collection = client.get_collection(collection_name)
     results = collection.query(query_texts=[query], n_results=n_results)

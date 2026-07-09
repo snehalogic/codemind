@@ -15,6 +15,8 @@ CLONE_DIR.mkdir(exist_ok=True)
 #GROQ
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
 #File filtering
 IGNORE_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",

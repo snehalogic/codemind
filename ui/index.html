@@ -120,6 +120,10 @@
           <div class="suggestion" onclick="sendQuestion('How is authentication handled?')">How is authentication handled?</div>
           <div class="suggestion" onclick="sendQuestion('Explain the data flow')">Explain the data flow</div>
           <div class="suggestion" onclick="sendQuestion('What would a new developer need to know?')">New dev onboarding</div>
+          <div class="suggestion" onclick="generateTests()">🧪 Generate tests + open PR</div>
+          <div class="suggestion" onclick="generateReadme()">📄 Generate README + open PR</div>
+          <div class="suggestion" onclick="runQualityCheck()">⭐ Code quality score</div>
+          <div class="suggestion" onclick="runSecurityScan()">🔒 Security scan</div>
         </div>
         <div class="chat-input-row">
           <input class="chat-input" id="chatInput" placeholder="Ask anything about this codebase..." onkeydown="if(event.key==='Enter')sendChat()"/>
@@ -266,6 +270,116 @@ async function loadGraph() {
   iframe.contentDocument.open();
   iframe.contentDocument.write(data.html);
   iframe.contentDocument.close();
+}
+
+async function generateTests() {
+  const repoUrl = document.getElementById('urlInput').value.trim();
+  addMessage('ai', '🧪 Generating tests and opening a PR on GitHub... this takes ~30 seconds.');
+  
+  const files = document.querySelectorAll('.tree-item span:nth-child(2)');
+  const firstPyFile = [...files].find(f => f.textContent.endsWith('.py'));
+  const filePath = firstPyFile ? firstPyFile.textContent : 'main.py';
+
+  try {
+    const res = await fetch(`${API}/generate-tests`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({repo_url: repoUrl, file_path: filePath})
+    });
+    const data = await res.json();
+    addMessage('ai', `✅ Done! PR opened on GitHub: <a href="${data.pr_url}" target="_blank" style="color:#9d96f5">${data.pr_url}</a>`);
+  } catch(e) {
+    addMessage('ai', '❌ Error: ' + e.message);
+  }
+}
+
+async function runSecurityScan() {
+  const repoUrl = document.getElementById('urlInput').value.trim();
+  addMessage('user', '🔒 Run a security scan on this repo');
+  addMessage('ai', '🔍 Scanning every file for vulnerabilities...');
+  
+  try {
+    const res = await fetch(`${API}/security-scan`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: repoUrl})
+    });
+    const data = await res.json();
+    
+    let msg = `🔒 Security Report\n\n`;
+    msg += `Score: ${data.security_score}/100\n`;
+    msg += `Files scanned: ${data.files_scanned}\n`;
+    msg += `HIGH: ${data.total_high} | MEDIUM: ${data.total_medium} | LOW: ${data.total_low}\n\n`;
+    
+    data.results.forEach(r => {
+      if (r.issues.length > 0) {
+        msg += `📄 ${r.filename}\n`;
+        r.issues.forEach(i => {
+          msg += `  [${i.severity}] ${i.title}\n`;
+          msg += `  Fix: ${i.fix}\n\n`;
+        });
+      }
+    });
+
+    if (data.total_high === 0 && data.total_medium === 0 && data.total_low === 0) {
+      msg += '✅ No vulnerabilities found!';
+    }
+
+    addMessage('ai', msg);
+  } catch(e) {
+    addMessage('ai', '❌ Error: ' + e.message);
+  }
+}
+
+async function generateReadme() {
+  const repoUrl = document.getElementById('urlInput').value.trim();
+  addMessage('user', '📄 Generate a README for this repo');
+  addMessage('ai', '✍️ Analyzing codebase and writing README... this takes ~30 seconds.');
+
+  try {
+    const res = await fetch(`${API}/generate-readme`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({repo_url: repoUrl})
+    });
+    const data = await res.json();
+    if (data.error) {
+      addMessage('ai', '❌ ' + data.error);
+      return;
+    }
+    addMessage('ai', `✅ README generated and PR opened!\n\n🔗 ${data.pr_url}\n\nFull README has been committed to the PR. Click the link above to view it on GitHub.`);
+  } catch(e) {
+    addMessage('ai', '❌ Error: ' + e.message);
+  }
+}
+
+async function runQualityCheck() {
+  const repoUrl = document.getElementById('urlInput').value.trim();
+  addMessage('user', '⭐ Run a code quality check');
+  addMessage('ai', '📊 Analyzing code quality...');
+
+  try {
+    const res = await fetch(`${API}/code-quality`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: repoUrl})
+    });
+    const data = await res.json();
+    if (data.error) { addMessage('ai', '❌ ' + data.error); return; }
+
+    const s = data.scores;
+    let msg = `⭐ Code Quality Report — Grade: ${data.grade} (${data.overall_score}/100)\n\n`;
+    msg += `📝 Documentation : ${s.documentation.score}/100 — ${s.documentation.detail}\n`;
+    msg += `🔀 Complexity     : ${s.complexity.score}/100 — ${s.complexity.detail}\n`;
+    msg += `🧪 Test Coverage  : ${s.test_coverage.score}/100 — ${s.test_coverage.detail}\n`;
+    msg += `📏 Code Style     : ${s.style.score}/100 — ${s.style.detail}\n\n`;
+    msg += `💡 Recommendations:\n`;
+    data.recommendations.forEach(r => { msg += `  • ${r}\n`; });
+
+    addMessage('ai', msg);
+  } catch(e) {
+    addMessage('ai', '❌ Error: ' + e.message);
+  }
 }
 
 function showTab(id, el) {

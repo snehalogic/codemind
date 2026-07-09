@@ -17,10 +17,13 @@ IGNORE_DIRS = {
 IGNORE_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",
     ".mp4", ".mp3", ".pdf", ".zip", ".tar", ".gz",
-    ".exe", ".dll", ".so", ".lock", ".woff", ".ttf"
+    ".exe", ".dll", ".so", ".lock", ".woff", ".ttf",
+    ".pkl", ".bin", ".pt", ".pth", ".h5", ".parquet"
 }
 
+
 def clone_repo(github_url: str) -> Path:
+    """Clone a GitHub repository to the local cloned_repos directory. Deletes existing copy if present."""
     repo_name = github_url.rstrip("/").split("/")[-1].replace(".git", "")
     clone_path = CLONE_DIR / repo_name
 
@@ -37,7 +40,9 @@ def clone_repo(github_url: str) -> Path:
     print(f"Done! Cloned to {clone_path}")
     return clone_path
 
+
 def walk_repo(repo_path: Path) -> list[dict]:
+    """Walk all files in a cloned repo, skipping ignored dirs and binary extensions. Returns list of file dicts."""
     files = []
 
     for root, dirs, filenames in os.walk(repo_path):
@@ -69,6 +74,7 @@ def walk_repo(repo_path: Path) -> list[dict]:
 
 
 def get_repo_summary(files: list[dict]) -> dict:
+    """Generate a summary of the repo including file counts, types, sizes, and largest files."""
     ext_counts = {}
     for f in files:
         ext = f["extension"] or "no extension"

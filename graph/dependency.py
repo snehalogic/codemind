@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 def build_dependency_graph(parsed_files: list[dict]) -> nx.DiGraph:
+    """Build a directed dependency graph from parsed files using import relationships."""
     G = nx.DiGraph()
 
     file_modules = {}
@@ -25,6 +26,7 @@ def build_dependency_graph(parsed_files: list[dict]) -> nx.DiGraph:
 
 
 def get_graph_stats(G: nx.DiGraph) -> dict:
+    """Return stats about the graph including node/edge counts and most imported files."""
     return {
         "total_nodes": G.number_of_nodes(),
         "total_edges": G.number_of_edges(),
@@ -34,6 +36,7 @@ def get_graph_stats(G: nx.DiGraph) -> dict:
 
 
 def visualize_graph(G: nx.DiGraph, output_path: str = "codemind_graph.html"):
+    """Generate an interactive HTML visualization of the dependency graph using Pyvis."""
     net = Network(height="800px", width="100%", directed=True, bgcolor="#1e1e1e", font_color="white")
     net.barnes_hut(spring_length=200)
 

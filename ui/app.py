@@ -110,11 +110,9 @@ else:
 
         for msg in st.session_state.chat_history:
             if msg["role"] == "user":
-                st.markdown(f'<div class="chat-msg-user">🧑 {msg["content"]}</div>',
-                            unsafe_allow_html=True)
+                st.info(f"🧑 {msg['content']}")
             else:
-                st.markdown(f'<div class="chat-msg-ai">🧠 {msg["content"]}</div>',
-                            unsafe_allow_html=True)
+                st.success(f"🧠 {msg['content']}")
 
         st.markdown("**Suggested questions:**")
         col1, col2, col3 = st.columns(3)

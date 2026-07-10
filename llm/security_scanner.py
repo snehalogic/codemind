@@ -1,9 +1,14 @@
+```python
 import sys
 import os
+import logging
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from groq import Groq
 from config import GROQ_API_KEY
+
+# Create a logger to handle security reports instead of printing to console
+logging.basicConfig(filename='security_report.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -100,10 +105,10 @@ def scan_repo(files: list[dict]) -> dict:
     total_low = 0
 
     python_files = [f for f in files if f["extension"] == ".py"]
-    print(f"Scanning {len(python_files)} Python files...")
+    logging.info(f"Scanning {len(python_files)} Python files...")
 
     for f in python_files:
-        print(f"  Scanning {f['relative_path']}...")
+        logging.info(f"  Scanning {f['relative_path']}...")
         result = scan_file_for_vulnerabilities(f["content"], f["relative_path"])
         results.append(result)
         total_high += result.get("high", 0)
@@ -129,14 +134,15 @@ if __name__ == "__main__":
     files = walk_repo(repo_path)
     report = scan_repo(files)
 
-    print(f"\n--- Security Report ---")
-    print(f"Files scanned: {report['files_scanned']}")
-    print(f"Security score: {report['security_score']}/100")
-    print(f"HIGH: {report['total_high']} | MEDIUM: {report['total_medium']} | LOW: {report['total_low']}")
+    logging.info(f"\n--- Security Report ---")
+    logging.info(f"Files scanned: {report['files_scanned']}")
+    logging.info(f"Security score: {report['security_score']}/100")
+    logging.info(f"HIGH: {report['total_high']} | MEDIUM: {report['total_medium']} | LOW: {report['total_low']}")
     
     for result in report["results"]:
         if result["issues"]:
-            print(f"\n{result['filename']}:")
+            logging.info(f"\n{result['filename']}:")
             for issue in result["issues"]:
-                print(f"  [{issue.get('severity')}] {issue.get('title')}")
-                print(f"    → {issue.get('fix')}")
+                logging.info(f"  [{issue.get('severity')}] {issue.get('title')}")
+                logging.info(f"    → {issue.get('fix')}")
+```

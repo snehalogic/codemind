@@ -1,3 +1,4 @@
+```python
 import os
 import shutil
 import git
@@ -8,17 +9,25 @@ load_dotenv()
 
 CLONE_DIR = Path("cloned_repos")
 
+# Added sensitive file extensions to IGNORE_EXTENSIONS to prevent potential sensitive data exposure
 IGNORE_DIRS = {
     ".git", "node_modules", "__pycache__", ".venv", "venv",
     "env", ".env", "dist", "build", ".next", ".nuxt",
     "coverage", ".pytest_cache", ".mypy_cache"
 }
 
+# Added sensitive file extensions to IGNORE_EXTENSIONS to prevent potential sensitive data exposure
 IGNORE_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",
     ".mp4", ".mp3", ".pdf", ".zip", ".tar", ".gz",
     ".exe", ".dll", ".so", ".lock", ".woff", ".ttf",
-    ".pkl", ".bin", ".pt", ".pth", ".h5", ".parquet"
+    ".pkl", ".bin", ".pt", ".pth", ".h5", ".parquet",
+    ".key", ".pem", ".cert", ".crt", ".csr", ".jks", ".jceks"
+}
+
+# Added sensitive file names to IGNORE_FILES to prevent potential sensitive data exposure
+IGNORE_FILES = {
+    "passwords.txt", "secrets.json", "credentials.yaml", "api_keys.txt"
 }
 
 
@@ -49,6 +58,10 @@ def walk_repo(repo_path: Path) -> list[dict]:
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
 
         for filename in filenames:
+            # Check if the file is in IGNORE_FILES to prevent potential sensitive data exposure
+            if filename in IGNORE_FILES:
+                continue
+
             ext = Path(filename).suffix.lower()
             if ext in IGNORE_EXTENSIONS:
                 continue
@@ -105,3 +118,4 @@ if __name__ == "__main__":
     print(f"\nLargest files:")
     for f in summary['largest_files']:
         print(f"  {f['relative_path']} ({f['size']:,} chars)")
+```

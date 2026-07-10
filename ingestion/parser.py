@@ -1,6 +1,9 @@
 import ast
 from pathlib import Path
+import logging
 
+# Set up logging to handle sensitive data
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def parse_python_file(file_info: dict) -> dict:
     """Parse a single Python file using AST to extract functions, classes, imports, and calls."""
@@ -67,14 +70,16 @@ def parse_repo(files: list[dict]) -> list[dict]:
     parsed = []
     python_files = [f for f in files if f["extension"] == ".py"]
     
-    print(f"Parsing {len(python_files)} Python files...")
+    # Fixed: Instead of printing, log the information
+    logging.info(f"Parsing {len(python_files)} Python files...")
     
     for f in python_files:
         parsed_file = parse_python_file(f)
         parsed.append(parsed_file)
 
     successful = len([p for p in parsed if not p["parse_error"]])
-    print(f"Successfully parsed {successful}/{len(python_files)} files")
+    # Fixed: Instead of printing, log the information
+    logging.info(f"Successfully parsed {successful}/{len(python_files)} files")
     return parsed
 
 
@@ -85,9 +90,11 @@ if __name__ == "__main__":
     files = walk_repo(repo_path)
     parsed = parse_repo(files)
 
-    print("\n--- Sample: first 3 parsed files ---")
+    # Fixed: Instead of printing, log the information
+    logging.info("\n--- Sample: first 3 parsed files ---")
     for p in parsed[:3]:
-        print(f"\n{p['relative_path']}")
-        print(f"  Classes : {[c['name'] for c in p['classes']]}")
-        print(f"  Functions: {[f['name'] for f in p['functions']][:5]}")
-        print(f"  Imports : {p['imports'][:5]}")
+        # Fixed: Instead of printing, log the information
+        logging.info(f"\n{p['relative_path']}")
+        logging.info(f"  Classes : {[c['name'] for c in p['classes']]}")
+        logging.info(f"  Functions: {[f['name'] for f in p['functions']][:5]}")
+        logging.info(f"  Imports : {p['imports'][:5]}")

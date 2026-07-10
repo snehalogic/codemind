@@ -1,9 +1,25 @@
+```python
 import sys
 import os
+import logging
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from groq import Groq
 from config import GROQ_API_KEY
+
+# Create a logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+# Create a file handler and a stream handler
+file_handler = logging.FileHandler('code_quality.log')
+stream_handler = logging.StreamHandler()
+# Create a formatter and attach it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+stream_handler.setFormatter(formatter)
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -156,16 +172,17 @@ def generate_recommendations(scores: dict) -> list[str]:
 def score_repo(files: list[dict], parsed_files: list[dict]) -> dict:
     """Run all quality checks and return an overall score, grade, and recommendations."""
 
-    print("Scoring documentation...")
+    # Instead of printing to the console, log the messages
+    logger.info("Scoring documentation...")
     doc_score = score_documentation(parsed_files)
 
-    print("Scoring complexity...")
+    logger.info("Scoring complexity...")
     complexity_score = score_complexity(parsed_files, files)
 
-    print("Scoring test coverage...")
+    logger.info("Scoring test coverage...")
     test_score = score_test_coverage(files)
 
-    print("Scoring code style...")
+    logger.info("Scoring code style...")
     style_score = score_style(files, parsed_files)
 
     scores = {
@@ -204,12 +221,14 @@ if __name__ == "__main__":
     parsed = parse_repo(files)
     report = score_repo(files, parsed)
 
-    print(f"\n--- Code Quality Report ---")
-    print(f"Overall Score : {report['overall_score']}/100 (Grade: {report['grade']})")
-    print(f"Documentation : {report['scores']['documentation']['score']}/100 — {report['scores']['documentation']['detail']}")
-    print(f"Complexity    : {report['scores']['complexity']['score']}/100 — {report['scores']['complexity']['detail']}")
-    print(f"Test Coverage : {report['scores']['test_coverage']['score']}/100 — {report['scores']['test_coverage']['detail']}")
-    print(f"Code Style    : {report['scores']['style']['score']}/100 — {report['scores']['style']['detail']}")
-    print(f"\nRecommendations:")
+    # Instead of printing to the console, log the messages
+    logger.info("\n--- Code Quality Report ---")
+    logger.info(f"Overall Score : {report['overall_score']}/100 (Grade: {report['grade']})")
+    logger.info(f"Documentation : {report['scores']['documentation']['score']}/100 — {report['scores']['documentation']['detail']}")
+    logger.info(f"Complexity    : {report['scores']['complexity']['score']}/100 — {report['scores']['complexity']['detail']}")
+    logger.info(f"Test Coverage : {report['scores']['test_coverage']['score']}/100 — {report['scores']['test_coverage']['detail']}")
+    logger.info(f"Code Style    : {report['scores']['style']['score']}/100 — {report['scores']['style']['detail']}")
+    logger.info(f"\nRecommendations:")
     for r in report["recommendations"]:
-        print(f"  • {r}")
+        logger.info(f"  • {r}")
+```

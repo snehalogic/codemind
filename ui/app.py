@@ -1,5 +1,7 @@
+```python
 import sys
 import os
+import shlex
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
@@ -11,7 +13,7 @@ from llm.groq_llm import ask_codebase
 
 st.set_page_config(
     page_title="CodeMind",
-    page_icon="🧠",
+    page_icon="",
     layout="wide"
 )
 
@@ -41,14 +43,14 @@ if "graph_stats" not in st.session_state:
 if "repo_name" not in st.session_state:
     st.session_state.repo_name = ""
 
-st.markdown('<div class="main-header">🧠 CodeMind</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">CodeMind</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Paste any GitHub repo — AI explains everything</div>', unsafe_allow_html=True)
 st.markdown("---")
 
 with st.sidebar:
-    st.markdown("### 🔗 Analyze a Repo")
+    st.markdown("### Analyze a Repo")
     repo_url = st.text_input("GitHub URL", placeholder="https://github.com/user/repo")
-    analyze_btn = st.button("⚡ Analyze", use_container_width=True, type="primary")
+    analyze_btn = st.button("Analyze", use_container_width=True, type="primary")
 
     if analyze_btn and repo_url:
         with st.spinner("Cloning repo..."):
@@ -76,43 +78,43 @@ with st.sidebar:
 
         st.session_state.analyzed = True
         st.session_state.chat_history = []
-        st.success("✅ Ready! Ask anything below.")
+        st.success("Ready! Ask anything below.")
 
     if st.session_state.analyzed:
         st.markdown("---")
-        st.markdown("### 📊 Repo Stats")
+        st.markdown("### Repo Stats")
         st.metric("Total Files", st.session_state.repo_stats.get("total_files", 0))
         st.metric("Python Files", st.session_state.repo_stats.get("python_files", 0))
         st.metric("Graph Nodes", st.session_state.graph_stats.get("total_nodes", 0))
         st.metric("Dependencies", st.session_state.graph_stats.get("total_edges", 0))
 
         st.markdown("---")
-        st.markdown("### 🔥 Most Imported")
+        st.markdown("### Most Imported")
         for node, count in st.session_state.graph_stats.get("most_imported", []):
             from pathlib import Path
             st.markdown(f"`{Path(node).name}` — {count} imports")
 
 if not st.session_state.analyzed:
-    st.info("👈 Paste a GitHub URL in the sidebar and click Analyze to get started.")
+    st.info("Paste a GitHub URL in the sidebar and click Analyze to get started.")
     st.markdown("""
     ### What CodeMind can do:
-    - 🔍 **Understand** every file, class, and function in any repo
-    - 🕸️ **Visualize** the full dependency graph
-    - 💬 **Answer** any question about the codebase
-    - 📄 **Explain** architecture, data flow, and more
+    - Understand every file, class, and function in any repo
+    - Visualize the full dependency graph
+    - Answer any question about the codebase
+    - Explain architecture, data flow, and more
     """)
 
 else:
-    tab1, tab2, tab3 = st.tabs(["💬 Chat", "🕸️ Dependency Graph", "📁 File Stats"])
+    tab1, tab2, tab3 = st.tabs(["Chat", "Dependency Graph", "File Stats"])
 
     with tab1:
         st.markdown(f"### Chatting with `{st.session_state.repo_name}`")
 
         for msg in st.session_state.chat_history:
             if msg["role"] == "user":
-                st.info(f"🧑 {msg['content']}")
+                st.info(f" {msg['content']}")
             else:
-                st.success(f"🧠 {msg['content']}")
+                st.success(f" {msg['content']}")
 
         st.markdown("**Suggested questions:**")
         col1, col2, col3 = st.columns(3)
@@ -127,10 +129,11 @@ else:
                 st.session_state.prefill = "What are the core classes?"
 
         prefill_val = st.session_state.get("prefill", "")
-        question = st.chat_input("Ask anything about this codebase...")
+        question = st.text_input("Ask anything about this codebase...", value=prefill_val)
 
         if question or prefill_val:
-            q = question or prefill_val
+            # Validate the input to prevent command injection attacks
+            q = shlex.quote(question or prefill_val)
             st.session_state.prefill = ""
             st.session_state.chat_history.append({"role": "user", "content": q})
 
@@ -141,7 +144,7 @@ else:
             st.rerun()
 
     with tab2:
-        st.markdown("### 🕸️ Dependency Graph")
+        st.markdown("### Dependency Graph")
         try:
             with open("ui/codemind_graph.html", "r", encoding="utf-8") as f:
                 graph_html = f.read()
@@ -150,9 +153,10 @@ else:
             st.info("Graph will appear here after analysis.")
 
     with tab3:
-        st.markdown("### 📁 File Breakdown")
+        st.markdown("### File Breakdown")
         st.metric("Total Characters", f"{st.session_state.repo_stats.get('total_chars', 0):,}")
         st.markdown("**Most imported files:**")
         for node, count in st.session_state.graph_stats.get("most_imported", []):
             from pathlib import Path
             st.progress(min(count / 500, 1.0), text=f"{Path(node).name} ({count} imports)")
+```

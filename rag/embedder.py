@@ -1,9 +1,13 @@
+```python
 import chromadb
 from pathlib import Path
-import sys
-sys.path.append("..")
-from config import MAX_CHUNK_SIZE, CHUNK_OVERLAP
+import importlib.util
+import importlib.machinery
 
+# Fix: Insecure use of sys.path, using importlib instead
+spec = importlib.util.spec_from_file_location("config", "../config.py")
+config = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config)
 
 def chunk_file(file_info: dict) -> list[dict]:
     """Split a file's content into overlapping chunks for embedding."""
@@ -13,14 +17,14 @@ def chunk_file(file_info: dict) -> list[dict]:
     start = 0
 
     while start < len(content):
-        end = start + MAX_CHUNK_SIZE
+        end = start + config.MAX_CHUNK_SIZE
         chunk_text = content[start:end]
         chunks.append({
             "text": chunk_text,
             "source": path,
             "chunk_index": len(chunks)
         })
-        start += MAX_CHUNK_SIZE - CHUNK_OVERLAP
+        start += config.MAX_CHUNK_SIZE - config.CHUNK_OVERLAP
 
     return chunks
 
@@ -65,12 +69,13 @@ def query_vector_store(query: str, collection_name: str = "codemind", n_results:
 
 
 if __name__ == "__main__":
-    import sys
-    sys.path.append("..")
-    from ingestion.cloner import clone_repo, walk_repo
+    # Fix: Insecure use of sys.path, using importlib instead
+    spec = importlib.util.spec_from_file_location("ingestion.cloner", "../ingestion/cloner.py")
+    cloner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cloner)
 
-    repo_path = clone_repo("https://github.com/tiangolo/fastapi")
-    files = walk_repo(repo_path)
+    repo_path = cloner.clone_repo("https://github.com/tiangolo/fastapi")
+    files = cloner.walk_repo(repo_path)
 
     python_files = [f for f in files if f["extension"] == ".py"]
     print(f"Building vector store from {len(python_files)} Python files...")
@@ -82,3 +87,4 @@ if __name__ == "__main__":
         source = results["metadatas"][0][i]["source"]
         print(f"\n--- Result {i+1}: {source} ---")
         print(doc[:200])
+```

@@ -1,5 +1,6 @@
 from groq import Groq
 import sys
+import re
 sys.path.append("..")
 from config import GROQ_API_KEY
 from rag.embedder import query_vector_store
@@ -9,15 +10,31 @@ client = Groq(api_key=GROQ_API_KEY)
 
 def sanitize_question(question: str) -> tuple[bool, str]:
     """Validate and sanitize user input. Returns (is_valid, cleaned_question) tuple."""
+    # Check for empty strings
     question = question.strip()
     if not question:
         return False, "Please ask a valid question."
+    
+    # Check for SQL injection attempts
+    if re.search(r"(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)", question, re.IGNORECASE):
+        return False, "Invalid input detected. Please ask a valid question."
+    
+    # Check for command injection attempts
+    if re.search(r"(\||;|&|`|\\$|>|<)", question):
+        return False, "Invalid input detected. Please ask a valid question."
+    
+    # Check for ASCII encoding
     if len(question) > 2000:
         question = question[:2000]
     try:
         question.encode("ascii")
     except UnicodeEncodeError:
         return False, "Please ask your question in plain ASCII text."
+    
+    # Check for other potential issues
+    if re.search(r"([<>\/\\])", question):
+        return False, "Invalid input detected. Please ask a valid question."
+    
     return True, question
 
 
